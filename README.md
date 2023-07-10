@@ -1,6 +1,6 @@
 # WFP_experiments
 
-cd hello  
+cd WFP_experiments  
 go mod init wfp_edr
 go get inet.af/wf  
   
