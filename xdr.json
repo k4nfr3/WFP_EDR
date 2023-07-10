@@ -1,0 +1,34 @@
+{
+  "Provider": {
+	"Provider_name": "Palo Alto Networks Corporation - Cortex XDR Network Isolation",
+	"Provider_ID": "{4544A023-2767-411C-86E4-3EA52A4AA172}"
+  },
+  "Sublayer": {
+	  "Sublayer_name" : "Palo Alto Networks Corporation - Cortex XDR Network Isolation",
+	  "Sublayer_ID" : "{849BDEF4-C2D5-4464-96E8-3CBE11841AD6}" 
+  },
+  "Block": [
+    {"Live-EU": "35.244.251.25"},
+    {"Live-CH": "34.65.213.226"},
+    {"Live-DE": "34.107.61.141"},
+    {"Live-US": "35.190.88.43"},
+    {"Live-CA": "35.203.99.74"},
+    {"Live-UK": "35.242.159.176"},
+    {"Live-JP": "34.84.201.32"},
+    {"Live-SG": "34.87.61.186"},
+    {"Live-AU": "35.244.66.177"},
+    {"Live-IN": "35.200.146.253"},
+    {"Live-PL": "34.118.62.80"},
+    {"EDR-EU": "34.102.140.103"},
+    {"EDR-CH": "34.149.180.250"},
+    {"EDR-DE": "34.107.161.143"},
+    {"EDR-US": "34.98.77.231"},
+    {"EDR-CA": "34.96.120.25"},
+    {"EDR-UK": "35.244.133.254"},
+    {"EDR-JP": "34.95.66.187"},
+    {"EDR-SG": "34.120.142.18"},
+    {"EDR-AU": "34.102.237.151"},
+    {"EDR-IN": "34.120.213.187"},
+    {"EDR-PL": "35.190.13.237"}
+  ]
+}
