@@ -1,8 +1,8 @@
 # WFP_experiments
 
 cd hello  
-go mod init hello
+go mod init wfp_edr
 go get inet.af/wf  
   
-go run hello.go  
-go build hello.go  
+go run wfp_edr.go  
+go build wfp_edr.go  
