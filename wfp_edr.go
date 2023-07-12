@@ -260,7 +260,7 @@ func install(configFile string) {
 	})
 	if err != nil {
 		fmt.Println(err)
-		fmt.Println("[!]  Seems you are in Isolation mode already !!! Failed creation of new sublayer ! Continuing still ...")
+		fmt.Println("[!] SubLayer ID already exists !!! not an issue, let's continue ...")
 		fmt.Println("")
 	} else {
 		fmt.Println("[+] Adding sublayer guid = ", guid, " name = ", config.Sublayer.Sublayer_name, " Isolation weight 0xffff")
