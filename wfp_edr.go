@@ -11,8 +11,8 @@ import (
 	"net/netip"
 	"os"
 	"regexp"
-
 	"strconv"
+	"strings"
 
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
@@ -53,6 +53,59 @@ func resolveIPAddress(host string) (string, error) {
 		return addrs[0], nil
 	}
 	return "", fmt.Errorf("[!]No IP address found for host: %s", host)
+}
+
+func cortex_read() {
+	var TableproxyIP []string
+	var Cortexport string
+	CortexConfigFile := `C:\ProgramData\Cyvera\LocalSystem\Data\db_backup\cloud_defined_proxy.txt`
+	content, err := ioutil.ReadFile(CortexConfigFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Convert file content to string
+	fileContent := string(content)
+
+	// Split the content into lines
+	lines := strings.Split(fileContent, "\n")
+	for _, line := range lines {
+		// Split the line by comma
+		values := strings.Split(line, ",")
+
+		// Print the values
+		for _, value := range values {
+			value := strings.Replace(value, ";", "", -1) // remove end of line ; char
+			subvalues := strings.Split(value, ":")
+			numentries := len(subvalues)
+			if numentries < 2 {
+				log.Panic("Error Splitting port from IP in cloud_defined_proxy.txt file")
+			}
+			TableproxyIP = append(TableproxyIP, subvalues[0])
+			Cortexport = subvalues[1]
+			fmt.Printf("IP = %s Port = %s\n", subvalues[0], subvalues[1])
+		}
+	}
+	fmt.Println("=========================================== XDR.json config example ===============================")
+	fmt.Println("{")
+	fmt.Println("\t\"Provider\": {")
+	fmt.Println("\t\t\"Provider_name\": \"WFP_EDR\",")
+	fmt.Println("\t\t\"Provider_ID\": \"{12345678-AAAA-BBBB-CCCC-123456789012}\"")
+	fmt.Println("\t},")
+	fmt.Println("\t\"Sublayer\": {")
+	fmt.Println("\t\t\"Sublayer_name\" : \"WFP_EDR_WEC\",")
+	fmt.Println("\t\t\"Sublayer_ID\" : \"{12345678-AAAA-BBBB-CCCC-123456789012}\"")
+	fmt.Println("\t},")
+	fmt.Println("\t\"Block_port\": \"" + Cortexport + "\",")
+	fmt.Println("\t\"Block\": [")
+	for i, wec := range TableproxyIP {
+		if i < len(TableproxyIP)-1 {
+			fmt.Println("\t\t{\"CortexProxy" + strconv.Itoa(i) + "\": \"" + wec + "\"},")
+		} else {
+			fmt.Println("\t\t{\"CortexProxy" + strconv.Itoa(i) + "\": \"" + wec + "\"}")
+			fmt.Println("\t]")
+		}
+	}
+	fmt.Println("}")
 }
 
 func wec_read() {
@@ -130,10 +183,10 @@ func read() {
 		panic(err)
 	}
 	fmt.Println("")
-	fmt.Printf("| %-38s | %-55s | %-80s |\n", "ProviderID", "ProviderName", "Description")
+	fmt.Printf("| %-38s | %-55s | %-80s\n", "ProviderID", "ProviderName", "Description")
 	fmt.Println("--------------------------------------------------------------------------------------------------------")
 	for _, FoundProvider := range ReadProvider {
-		fmt.Printf("| %-38s | %-55s | %-80s |\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
+		fmt.Printf("| %-38s | %-55s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
 	}
 	fmt.Println("")
 	Readsublayer, err := session.Sublayers()
@@ -361,7 +414,8 @@ func main() {
 	printFlag := flag.Bool("print", false, "Print WFP Providers and SubLayers")
 	installFlag := flag.Bool("install", false, "Install WFP rules (requires the file option)")
 	fileFlag := flag.String("file", "", "Specify a json file path")
-	sysmonflag := flag.Bool("wec", false, "Get WEC Config and generate a WFP config")
+	getwecflag := flag.Bool("getwec", false, "Get WEC Config and generate a WFP config")
+	getcortexflag := flag.Bool("getcortex", false, "Get Cortex XDR proxy config and generate a WFP config")
 	flag.Parse()
 
 	// Let's print Provider IDs and SubLayer IDs
@@ -378,9 +432,14 @@ func main() {
 		}
 	}
 
-	if *sysmonflag {
+	if *getwecflag {
 		fmt.Println("Let's get WEC config from registry...")
 		wec_read()
+		os.Exit(0)
+	}
+	if *getcortexflag {
+		fmt.Println("Let's get Cortex XDR Proxy config...")
+		cortex_read()
 		os.Exit(0)
 	}
 }
