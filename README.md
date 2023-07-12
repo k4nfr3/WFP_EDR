@@ -2,8 +2,9 @@
 
 The goal of this project is on Windows Machine to abuse the WFP (Windows Filtering Platform) or also known as the Windows Firewall, to stop communication with the Cloud part of the EDRs.  
 It requires to be runned as privileged user.  
-  
-*This tool is intended solely for academic purposes and must not be utilized for any unlawful activities or any activities that breach ethical guidelines and regulations.*  
+
+# Disclaimer  
+This tool is intended solely for academic purposes and must not be utilized for any unlawful activities or any activities that breach ethical guidelines and regulations.
 
 
 ```
@@ -17,7 +18,7 @@ go run wfp_edr.go
 go build wfp_edr.go  
 ```
 
-# Usage
+## Usage
 ```
 
 C:\Temp\hello>wfp_edr.exe -help
@@ -35,7 +36,9 @@ Usage of wfp_edr.exe:
 
 ```
 
-# Get WEC
+## Get WEC  
+This option is to read WEF (Windows Event Forwarding) configuration from Registry.  
+Which will prevent sending logs to the WEC (Windows Event Collector).   
 ```
 C:\Temp\hello>wfp_edr.exe -getwec
 Let's get WEC config from registry...
@@ -62,7 +65,11 @@ Let's get WEC config from registry...
         ]
 }
 ```
-# Get Cortex XDR
+## Get Cortex XDR
+
+In some cases, Cortex XDR is configured to use a specifc Proxy address and Port.  
+Denying access to the Cortex XDR wouldn't have any effect.   
+This option is to read that configuration and generate a config json.  
 
 ```
 
@@ -89,7 +96,7 @@ IP = 192.168.1.2 Port = 8080
 
 ```
      
-# Install for XDR
+## Install for Cortex XDR
 
 ```
 C:\Temp\hello>wfp_edr.exe -install -file xdr.json
@@ -133,7 +140,7 @@ C:\Temp\hello>wfp_edr.exe -install -file xdr.json
 [+] Finished
 ```
 
-# Install for CrowdStrike
+## Install for CrowdStrike
 ```
 wfp_edr.exe -install -file cs.json
 [+] Starting Anti EDR with WFP filters
