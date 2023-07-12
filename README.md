@@ -1,4 +1,11 @@
-# WFP_experiments
+# WFP_EDR
+
+The goal of this project is on Windows Machine to abuse the WFP (Windows Filtering Platform) or also known as the Windows Firewall, to stop communication with the Cloud part of the EDRs.  
+It requires to be runned as privileged user.  
+  
+*This tool is intended solely for academic purposes and must not be utilized for any unlawful activities or any activities that breach ethical guidelines and regulations.*  
+
+
 ```
 cd WFP_experiments  
 go mod init wfp_edr
