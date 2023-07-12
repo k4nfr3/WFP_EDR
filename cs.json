@@ -1,0 +1,31 @@
+{
+  "Provider": {
+	"Provider_name": "CrowdStrike",
+	"Provider_ID": "{DD00A9D2-2593-497A-B84E-A1C47AB952D5}"
+  },
+  "Sublayer": {
+	  "Sublayer_name" : "CrowdStrike WFP Sub-layer"
+  },
+  "Block_port": "443",
+  "Block": [
+    {"Term-EU1": "3.121.6.180"},
+    {"Term-EU2": "3.121.187.176"},
+    {"Term-EU3": "3.121.238.86"},
+    {"Term-EU4": "3.125.15.130"},
+    {"Term-EU5": "18.158.187.80"},
+    {"Term-EU6": "18.198.53.88"},
+    {"LFO-download1": "3.78.32.129"},
+    {"LFO-download2": "3.121.13.180"},
+    {"LFO-download3": "3.123.240.202"},
+    {"LFO-download4": "18.184.114.155"},
+    {"LFO-download5": "18.194.8.224"},
+    {"LFO-download6": "35.156.219.65"},
+    {"LFO-upload1": "3.69.184.79"},
+    {"LFO-upload2": "3.76.143.53"},
+    {"LFO-upload3": "3.77.82.22"},
+    {"LFO-forensic1": "3.69.184.79"},
+    {"LFO-forensic2": "3.127.43.50"},
+    {"LFO-forensic3": "18.193.144.218"}
+  ]
+}
+
