@@ -7,6 +7,7 @@
 	  "Sublayer_name" : "Palo Alto Networks Corporation - Cortex XDR Network Isolation",
 	  "Sublayer_ID" : "{849BDEF4-C2D5-4464-96E8-3CBE11841AD6}" 
   },
+  "Block_port": "443",
   "Block": [
     {"Live-EU": "35.244.251.25"},
     {"Live-CH": "34.65.213.226"},
