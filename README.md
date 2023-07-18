@@ -6,7 +6,7 @@ It requires to be runned as privileged user.
 # Disclaimer  
 This tool is intended solely for academic purposes and must not be utilized for any unlawful activities or any activities that breach ethical guidelines and regulations.
 
-
+# Build
 ```
 cd WFP_experiments  
 go mod init wfp_edr
@@ -15,7 +15,14 @@ go get x/sys/windows
 go get x/sys/windows/registry  
   
 go run wfp_edr.go  
-go build wfp_edr.go  
+go build wfp_edr.go
+```
+# Build obfuscated
+With String obfuscations library Garble
+```
+go install mvdan.cc/garble@latest
+... (your path should contain garble.exe)  
+garble -tiny -literals -seed=random build wfp_edr.go
 ```
 
 ## Usage
