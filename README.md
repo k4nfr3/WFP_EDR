@@ -30,7 +30,7 @@ garble -tiny -literals -seed=random build wfp_edr.go
 
 C:\Temp\hello>wfp_edr.exe -help
 Usage of wfp_edr.exe:
-  -file string
+ -file string
         Specify a json file path
   -getcortex
         Get Cortex XDR proxy config and generate a WFP config
@@ -38,6 +38,8 @@ Usage of wfp_edr.exe:
         Get WEC Config and generate a WFP config
   -install
         Install WFP rules (requires the file option)
+  -output string
+        Specify output file. To be used in conjonction with generating with getwec or getcortex
   -print
         Print WFP Providers and SubLayers
 
