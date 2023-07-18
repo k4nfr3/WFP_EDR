@@ -55,9 +55,12 @@ func resolveIPAddress(host string) (string, error) {
 	return "", fmt.Errorf("[!]No IP address found for host: %s", host)
 }
 
-func cortex_read() {
+func cortex_read(outputFile *os.File) {
+
 	var TableproxyIP []string
 	var Cortexport string
+	var outputjson string
+
 	CortexConfigFile := `C:\ProgramData\Cyvera\LocalSystem\Data\db_backup\cloud_defined_proxy.txt`
 	content, err := ioutil.ReadFile(CortexConfigFile)
 	if err != nil {
@@ -85,32 +88,55 @@ func cortex_read() {
 			fmt.Printf("IP = %s Port = %s\n", subvalues[0], subvalues[1])
 		}
 	}
-	fmt.Println("=========================================== XDR.json config example ===============================")
-	fmt.Println("{")
-	fmt.Println("\t\"Provider\": {")
-	fmt.Println("\t\t\"Provider_name\": \"WFP_EDR\",")
-	fmt.Println("\t\t\"Provider_ID\": \"{12345678-AAAA-BBBB-CCCC-123456789012}\"")
-	fmt.Println("\t},")
-	fmt.Println("\t\"Sublayer\": {")
-	fmt.Println("\t\t\"Sublayer_name\" : \"WFP_EDR_WEC\",")
-	fmt.Println("\t\t\"Sublayer_ID\" : \"{12345678-AAAA-BBBB-CCCC-123456789012}\"")
-	fmt.Println("\t},")
-	fmt.Println("\t\"Block_port\": \"" + Cortexport + "\",")
-	fmt.Println("\t\"Block\": [")
+	outputjson = outputjson + "{\n"
+	outputjson = outputjson + "\t\"Provider\": {\n"
+	outputjson = outputjson + "\t\t\"Provider_name\": \"WFP_EDR\",\n"
+	outputjson = outputjson + "\t\t\"Provider_ID\": \"{12345678-AAAA-BBBB-CCCC-123456789012}\"\n"
+	outputjson = outputjson + "\t},\n"
+	outputjson = outputjson + "\t\"Sublayer\": {\n"
+	outputjson = outputjson + "\t\t\"Sublayer_name\" : \"WFP_EDR_WEC\",\n"
+	outputjson = outputjson + "\t\t\"Sublayer_ID\" : \"{12345678-AAAA-BBBB-CCCC-123456789012}\"\n"
+	outputjson = outputjson + "\t},\n"
+	outputjson = outputjson + "\t\"Block_port\": \"" + Cortexport + "\",\n"
+	outputjson = outputjson + "\t\"Block\": [\n"
 	for i, wec := range TableproxyIP {
 		if i < len(TableproxyIP)-1 {
-			fmt.Println("\t\t{\"CortexProxy" + strconv.Itoa(i) + "\": \"" + wec + "\"},")
+			outputjson = outputjson + "\t\t{\"CortexProxy" + strconv.Itoa(i) + "\": \"" + wec + "\"},\n"
 		} else {
-			fmt.Println("\t\t{\"CortexProxy" + strconv.Itoa(i) + "\": \"" + wec + "\"}")
-			fmt.Println("\t]")
+			outputjson = outputjson + "\t\t{\"CortexProxy" + strconv.Itoa(i) + "\": \"" + wec + "\"}\n"
+			outputjson = outputjson + "\t]\n"
 		}
 	}
-	fmt.Println("}")
+	outputjson = outputjson + "}\n"
+
+	fmt.Print("\n\n")
+	if outputFile != nil {
+		fileInfo, _ := outputFile.Stat()
+		if fileInfo.Size() > 0 {
+			log.Panic("[!] Output file already exists. Exiting !")
+			os.Exit(1)
+		}
+		_, err := outputFile.WriteString(outputjson)
+		if err != nil {
+			fmt.Println("[!] Error writing to outputFile:", err)
+			return
+		} else {
+			fmt.Println("JSON content written to file : ", outputFile.Name())
+			fmt.Print("\n\n")
+		}
+	} else {
+		fmt.Println("=========================================== XDR.json config example ===============================")
+
+	}
+	fmt.Print(outputjson)
+
 }
 
-func wec_read() {
+func wec_read(outputFile *os.File) {
 	var TableWECIP []string
 	var WECPort string
+	var outputjson string
+
 	keyPath := `SOFTWARE\Policies\Microsoft\Windows\EventLog\EventForwarding\SubscriptionManager`
 
 	key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ)
@@ -148,22 +174,42 @@ func wec_read() {
 
 		}
 		fmt.Println("=========================================== WEC.json config example ===============================")
-		fmt.Println("{")
-		fmt.Println("\t\"Provider\": {")
-		fmt.Println("\t\t\"Provider_name\": \"WFP_EDR\",")
-		fmt.Println("\t\t\"Provider_ID\": \"{12345678-AAAA-BBBB-CCCC-123456789012}\"")
-		fmt.Println("\t},")
-		fmt.Println("\t\"Sublayer\": {")
-		fmt.Println("\t\t\"Sublayer_name\" : \"WFP_EDR_WEC\",")
-		fmt.Println("\t\t\"Sublayer_ID\" : \"{12345678-AAAA-BBBB-CCCC-123456789012}\"")
-		fmt.Println("\t},")
-		fmt.Println("\t\"Block_port\": \"" + WECPort + "\",")
-		fmt.Println("\t\"Block\": [")
+		outputjson = outputjson + "{\n"
+		outputjson = outputjson + "\t\"Provider\": {\n"
+		outputjson = outputjson + "\t\t\"Provider_name\": \"WFP_EDR\",\n"
+		outputjson = outputjson + "\t\t\"Provider_ID\": \"{12345678-AAAA-BBBB-CCCC-123456789012}\"\n"
+		outputjson = outputjson + "\t},\n"
+		outputjson = outputjson + "\t\"Sublayer\": {\n"
+		outputjson = outputjson + "\t\t\"Sublayer_name\" : \"WFP_EDR_WEC\",\n"
+		outputjson = outputjson + "\t\t\"Sublayer_ID\" : \"{12345678-AAAA-BBBB-CCCC-123456789012}\"\n"
+		outputjson = outputjson + "\t},\n"
+		outputjson = outputjson + "\t\"Block_port\": \"" + WECPort + "\",\n"
+		outputjson = outputjson + "\t\"Block\": [\n"
 		for _, wec := range TableWECIP {
-			fmt.Println("\t\t{\"WEC\": \"" + wec + "\"}")
-			fmt.Println("\t]")
+			outputjson = outputjson + "\t\t{\"WEC\": \"" + wec + "\"}\n"
+			outputjson = outputjson + "\t]\n"
 		}
-		fmt.Println("}")
+		outputjson = outputjson + "}\n"
+		fmt.Print("\n\n")
+		if outputFile != nil {
+			fileInfo, _ := outputFile.Stat()
+			if fileInfo.Size() > 0 {
+				log.Panic("[!] Output file already exists. Exiting !")
+				os.Exit(1)
+			}
+			_, err := outputFile.WriteString(outputjson)
+			if err != nil {
+				fmt.Println("[!] Error writing to outputFile:", err)
+				return
+			} else {
+				fmt.Println("JSON content written to file : ", outputFile.Name())
+				fmt.Print("\n\n")
+			}
+		} else {
+			fmt.Println("=========================================== WEC.json config example ===============================")
+
+		}
+		fmt.Print(outputjson)
 	}
 	key.Close()
 }
@@ -416,6 +462,7 @@ func main() {
 	fileFlag := flag.String("file", "", "Specify a json file path")
 	getwecflag := flag.Bool("getwec", false, "Get WEC Config and generate a WFP config")
 	getcortexflag := flag.Bool("getcortex", false, "Get Cortex XDR proxy config and generate a WFP config")
+	outputFlag := flag.String("output", "", "Specify output file. To be used in conjonction with generating with getwec or getcortex")
 	flag.Parse()
 
 	// Let's print Provider IDs and SubLayer IDs
@@ -434,12 +481,37 @@ func main() {
 
 	if *getwecflag {
 		fmt.Println("Let's get WEC config from registry...")
-		wec_read()
-		os.Exit(0)
+		if *outputFlag != "" {
+			outputfile, err := os.OpenFile(*outputFlag, os.O_WRONLY|os.O_CREATE, 0644)
+			if err != nil {
+				fmt.Println("Error creating output file\n", err)
+				os.Exit(1)
+			}
+			defer outputfile.Close()
+			wec_read(outputfile)
+			os.Exit(0)
+		} else {
+			wec_read(nil)
+			os.Exit(0)
+
+		}
+
 	}
 	if *getcortexflag {
 		fmt.Println("Let's get Cortex XDR Proxy config...")
-		cortex_read()
-		os.Exit(0)
+		if *outputFlag != "" {
+			outputfile, err := os.OpenFile(*outputFlag, os.O_WRONLY|os.O_CREATE, 0644)
+			if err != nil {
+				fmt.Println("Error creating output file\n", err)
+				os.Exit(1)
+			}
+			defer outputfile.Close()
+			cortex_read(outputfile)
+			os.Exit(0)
+		} else {
+			cortex_read(nil)
+			os.Exit(0)
+
+		}
 	}
 }
