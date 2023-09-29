@@ -7,7 +7,7 @@ It requires to be runned as privileged user.
 This tool is intended solely for academic purposes and must not be utilized for any unlawful activities or any activities that breach ethical guidelines and regulations.
 
 # Known technique
-I stumbled on reading Nightawk 0.2.6 release note, and it seems this eaxct same idea of blocking flow has been implemented with their FireBlock
+I stumbled on reading Nightawk 0.2.6 release note, and it seems nearly the same idea of blocking flow has been implemented with their FireBlock. Except they opted to block the exe instead of dest IPs.
 
 # Build
 ```
