@@ -14,8 +14,8 @@ I stumbled on reading Nightawk 0.2.6 release note, and it seems nearly the same 
 cd WFP_experiments  
 go mod init wfp_edr
 go get inet.af/wf   
-go get x/sys/windows  
-go get x/sys/windows/registry  
+go get golang.org/x/sys/windows  
+go get golang.org/x/sys/windows/registry  
   
 go run wfp_edr.go  
 go build wfp_edr.go
@@ -45,7 +45,8 @@ Usage of wfp_edr.exe:
         Specify output file. To be used in conjonction with generating with getwec or getcortex
   -print
         Print WFP Providers and SubLayers
-
+  -providerID string
+        in combination with -print to print all rules of a providerID
 ```
 
 ## Get WEC  
