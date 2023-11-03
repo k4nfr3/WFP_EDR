@@ -33,7 +33,9 @@ garble -tiny -literals -seed=random build wfp_edr.go
 
 C:\Temp\hello>wfp_edr.exe -help
 Usage of wfp_edr.exe:
- -file string
+  -deleteproviderID string
+        Delete all rules from ProviderID
+  -file string
         Specify a json file path
   -getcortex
         Get Cortex XDR proxy config and generate a WFP config
@@ -43,11 +45,18 @@ Usage of wfp_edr.exe:
         Install WFP rules (requires the file option)
   -output string
         Specify output file. To be used in conjonction with generating with getwec or getcortex
+  -persistent
+        in combination with -install to make them permanent
   -print
         Print WFP Providers and SubLayers
   -providerID string
-        in combination with -print to print all rules of a providerID
+        Specify Provider ID with print
 ```
+## Print all providers and Sublayers
+C:\Temp\hello>wfp_edr.exe -print
+
+## Print all rules from a specific provider
+C:\Temp\hello>wfp_edr.exe -print -providerID {4B153735-1049-4480-AAB4-D1B9BDC03710} 
 
 ## Get WEC  
 This option is to read WEF (Windows Event Forwarding) configuration from Registry.  
@@ -192,4 +201,8 @@ An object with that GUID or LUID already exists.
 [+] Adding WFP rule to Allow ANY ICMPv4 guid =  {9AAAF2B8-8BDC-4050-806F-190D7A64A0D1}  name = 'EDR_Isolate_bypass_ICMP_RULE' for layer =  OUTBOUND_ICMP_ERROR_V4
 [+] Adding WFP rule to Allow ANY ICMPv4 guid =  {E64B2239-9B71-4888-87C1-F5231C8F03EE}  name = 'EDR_Isolate_bypass_ICMP_RULE' for layer =  INBOUND_ICMP_ERROR_V4
 ==> Press ENTER to finish and remove tempory WFP rules...
+```
+## Install with persistence
+```
+wfp_edr.exe -install -file cs.json -persistent
 ```
