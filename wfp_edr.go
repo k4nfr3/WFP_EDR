@@ -229,24 +229,34 @@ func read() {
 		panic(err)
 	}
 	fmt.Println("")
-	fmt.Printf("| %-38s | %-55s | %-80s\n", "ProviderID", "ProviderName", "Description")
-	fmt.Println("--------------------------------------------------------------------------------------------------------")
+	fmt.Printf("| %-38s | %-62s | %-80s\n", "ProviderID", "ProviderName", "Description")
+	fmt.Println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+
 	for _, FoundProvider := range ReadProvider {
-		fmt.Printf("| %-38s | %-55s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
+		fmt.Printf("| %-38s | %-62s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
 	}
 	fmt.Println("")
 	Readsublayer, err := session.Sublayers()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-4s\n", "ProviderID", "SubLayerID", "SublayerName", "Weight", "Persistent")
-	fmt.Println("--------------------------------------------------------------------------------------------------------")
+	fmt.Printf("| %-38s | %-38s | %-62s | %-10s | %-4s\n", "ProviderID", "SubLayerID", "SublayerName", "Weight", "Persistent")
+	fmt.Println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 	for _, FoundSubLayer := range Readsublayer {
-		fmt.Printf("| %-38s | %-38s | %-60s | %-10d | %-10t\n", FoundSubLayer.Provider, FoundSubLayer.ID.String(), FoundSubLayer.Name, FoundSubLayer.Weight, FoundSubLayer.Persistent)
+		fmt.Printf("| %-38s | %-38s | %-62s | %-10d | %-10t\n", FoundSubLayer.Provider, FoundSubLayer.ID.String(), FoundSubLayer.Name, FoundSubLayer.Weight, FoundSubLayer.Persistent)
 	}
 }
 
-func read_rules(PrintProviderID string) {
+func ContainsString(slice []string, target string) bool {
+    for _, element := range slice {
+        if element == target {
+            return true
+        }
+    }
+    return false
+}
+
+func read_rules(PrintProviderID string, PrintProviderName string) {
 	session, err := wf.New(&wf.Options{
 		Name:    "EDR Offensive tool POC with WFP",
 		Dynamic: true,
@@ -263,11 +273,22 @@ func read_rules(PrintProviderID string) {
 	}
 	fmt.Println("\n")
 	fmt.Printf("| %-38s | %-55s | %-80s\n", "ProviderID", "ProviderName", "Description")
-	fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	fmt.Println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	var tableproviderID []string
 	for _, FoundProvider := range ReadProvider {
-		if FoundProvider.ID.String() == PrintProviderID {
-			fmt.Printf("| %-38s | %-55s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
+		if PrintProviderID == "" {
+			if strings.Contains(FoundProvider.Name, PrintProviderName) {
+				tableproviderID = append(tableproviderID, FoundProvider.ID.String())
+			}
 		}
+		if PrintProviderID != "" || PrintProviderName!= "" {
+  			if FoundProvider.ID.String() == PrintProviderID || strings.Contains(FoundProvider.Name, PrintProviderName) {
+				fmt.Printf("| %-38s | %-55s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
+			}
+		} else {
+			fmt.Println("[!] Error ProviderID or ProviderName are empty !")
+			os.Exit(0)
+		}	
 	}
 	fmt.Println("\n")
 	Readsublayer, err := session.Sublayers()
@@ -277,21 +298,27 @@ func read_rules(PrintProviderID string) {
 	fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-4s\n", "ProviderID", "SubLayerID", "SublayerName", "Weight", "Persistent")
 	fmt.Println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 	for _, FoundSubLayer := range Readsublayer {
-		if FoundSubLayer.Provider.String() == PrintProviderID {
+		if ContainsString(tableproviderID, FoundSubLayer.Provider.String()) {
 			fmt.Printf("| %-38s | %-38s | %-60s | %-10d | %-10t\n", FoundSubLayer.Provider, FoundSubLayer.ID.String(), FoundSubLayer.Name, FoundSubLayer.Weight, FoundSubLayer.Persistent)
-		}
+		} 
 	}
 	fmt.Println("\n")
 	ReadRules, err := session.Rules()
 	fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-4s | %-4s\n", "RuleID", "RuleName", "Match condition(s)", "Action", "Persistent", "Boot")
 	mycondition := ""
 	for _, FoundRule := range ReadRules {
-		if FoundRule.Provider.String() == PrintProviderID {
+		if ContainsString(tableproviderID, FoundRule.Provider.String()) {
 			if len(FoundRule.Conditions) != 0 {
 				fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 				myfirstline := true
 				for _, entry := range FoundRule.Conditions {
 					mycondition = entry.String()
+					mycondition = strings.Replace(mycondition, "IP_PROTOCOL == 17", "IP_PROTOCOL == UDP", -1 )
+					mycondition = strings.Replace(mycondition, "IP_PROTOCOL == 6", "IP_PROTOCOL == TCP", -1)
+					mycondition = strings.Replace(mycondition, "IP_PROTOCOL == 1", "IP_PROTOCOL == ICMP", -1)
+					if strings.HasPrefix(mycondition, "ALE_USER_ID == ") || strings.HasPrefix(mycondition, "ALE_PACKAGE_ID == "){
+						continue // Skip this iteration
+					}
 					if myfirstline {
 						fmt.Printf("| %-38s | %-38s | %-60s | %-10s | %-10t | %-10t\n", FoundRule.ID.String(), FoundRule.Name, mycondition, FoundRule.Action.String(), FoundRule.Persistent, FoundRule.BootTime)
 						myfirstline = false
@@ -557,6 +584,7 @@ func main() {
 	}
 	printFlag := flag.Bool("print", false, "Print WFP Providers and SubLayers")
 	providerIDFlag := flag.String("providerID", "", "Specify Provider ID with print")
+	providerNameFlag := flag.String("providerName", "", "Specify Provider name or part of name with print")
 	installFlag := flag.Bool("install", false, "Install WFP rules (requires the file option)")
 	persistentFlag := flag.Bool("persistent", false, "in combination with -install to make them permanent")
 	fileFlag := flag.String("file", "", "Specify a json file path")
@@ -568,8 +596,8 @@ func main() {
 
 	// Let's print Provider IDs and SubLayer IDs
 	if *printFlag {
-		if *providerIDFlag != "" {
-			read_rules(*providerIDFlag)
+		if *providerIDFlag != "" || *providerNameFlag != ""{
+			read_rules(*providerIDFlag, *providerNameFlag)
 		} else {
 			read()
 		}
