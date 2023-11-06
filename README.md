@@ -51,6 +51,9 @@ Usage of wfp_edr.exe:
         Print WFP Providers and SubLayers
   -providerID string
         Specify Provider ID with print
+  -providerName string
+        Specify Provider name or part of name with print
+
 ```
 ## Print all providers and Sublayers
 C:\Temp\hello>wfp_edr.exe -print
