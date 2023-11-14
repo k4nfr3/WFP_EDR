@@ -4,7 +4,8 @@
 	"Provider_ID": "{DD00A9D2-2593-497A-B84E-A1C47AB952D5}"
   },
   "Sublayer": {
-	  "Sublayer_name" : "CrowdStrike WFP Sub-layer"
+	  "Sublayer_name" : "CrowdStrike WFP Sub-layer",
+	  "Sublayer_ID" : "{6F4CF567-44A9-4D00-AA33-E2F2AFE237C2}"
   },
   "Block_port": "443",
   "Block": [
@@ -19,6 +20,7 @@
     {"LFO-download3": "3.123.240.202"},
     {"LFO-download4": "18.184.114.155"},
     {"LFO-download5": "18.194.8.224"},
+    {"LFO-download7": "18.196.94.202"},
     {"LFO-download6": "35.156.219.65"},
     {"LFO-upload1": "3.69.184.79"},
     {"LFO-upload2": "3.76.143.53"},
@@ -26,6 +28,9 @@
     {"LFO-forensic1": "3.69.184.79"},
     {"LFO-forensic2": "3.127.43.50"},
     {"LFO-forensic3": "18.193.144.218"}
+    {"LFO-upload4": "3.121.13.180"},
+    {"LFO-upload5": "3.121.28.37"},
+    {"LFO-upload6": "3.121.6.180"},
+    {"LFO-upload7": "52.29.26.172"},
   ]
 }
-
