@@ -209,3 +209,7 @@ An object with that GUID or LUID already exists.
 ```
 wfp_edr.exe -install -file cs.json -persistent
 ```
+## Acknowledgement
+Florian Audon (Orange Cyber Defense Switzerland) for the sharing of the knowledge of the library and exchanging ideas enabling the creation of the tool.
+I have kept this repo private until past his presentation at Barbhack at Toulon
+https://x.com/orangecyberch/status/1839545636921696628
