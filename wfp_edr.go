@@ -276,19 +276,20 @@ func read_rules(PrintProviderID string, PrintProviderName string) {
 	fmt.Println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 	var tableproviderID []string
 	for _, FoundProvider := range ReadProvider {
-		if PrintProviderID == "" {
-			if strings.Contains(FoundProvider.Name, PrintProviderName) {
+		if PrintProviderID != "" {
+			if FoundProvider.ID.String() == PrintProviderID {
+				fmt.Printf("| %-38s | %-55s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
 				tableproviderID = append(tableproviderID, FoundProvider.ID.String())
 			}
-		}
-		if PrintProviderID != "" || PrintProviderName!= "" {
-  			if FoundProvider.ID.String() == PrintProviderID || strings.Contains(FoundProvider.Name, PrintProviderName) {
+		} else if PrintProviderName != "" {
+			if strings.Contains(FoundProvider.Name, PrintProviderName) {
 				fmt.Printf("| %-38s | %-55s | %-80s\n", FoundProvider.ID.String(), FoundProvider.Name, FoundProvider.Description)
+				tableproviderID = append(tableproviderID, FoundProvider.ID.String())
 			}
 		} else {
 			fmt.Println("[!] Error ProviderID or ProviderName are empty !")
 			os.Exit(0)
-		}	
+		}
 	}
 	fmt.Println("\n")
 	Readsublayer, err := session.Sublayers()
