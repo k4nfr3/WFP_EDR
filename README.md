@@ -11,7 +11,7 @@ I stumbled on reading Nightawk 0.2.6 release note, and it seems nearly the same 
 
 # Build
 ```
-cd WFP_experiments  
+cd WFP_EDR  
 go mod init wfp_edr
 go get inet.af/wf   
 go get golang.org/x/sys/windows  
