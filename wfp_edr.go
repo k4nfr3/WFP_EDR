@@ -368,6 +368,73 @@ func delete_rule(Provider_ID_to_be_deleted string) {
 
 }
 
+func print_rules_by_name(nameFilter string) {
+	session, err := wf.New(&wf.Options{
+		Name:    "EDR Offensive tool POC with WFP",
+		Dynamic: true,
+	})
+	if err != nil {
+		fmt.Println("[!] Error creating new WFP session !\n\nAre you sure to be running with privileges ?")
+		log.Fatal(err)
+	}
+
+	fmt.Println("[+] Created new Session name = 'EDR Offensive tool POC WITH wfp'")
+	fmt.Printf("[+] Searching for rules with name containing: '%s'\n\n", nameFilter)
+
+	ReadRules, err := session.Rules()
+	if err != nil {
+		panic(err)
+	}
+
+	filterLower := strings.ToLower(nameFilter)
+	matchCount := 0
+
+	fmt.Printf("| %-38s | %-38s | %-38s | %-60s | %-10s | %-10s | %-10s\n",
+		"RuleID", "RuleName", "ProviderID", "Match condition(s)", "Action", "Persistent", "Boot")
+
+	for _, FoundRule := range ReadRules {
+		if !strings.Contains(strings.ToLower(FoundRule.Name), filterLower) {
+			continue
+		}
+		if len(FoundRule.Conditions) == 0 {
+			fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+			fmt.Printf("| %-38s | %-38s | %-38s | %-60s | %-10s | %-10t | %-10t\n",
+				FoundRule.ID.String(), FoundRule.Name, FoundRule.Provider.String(),
+				"(no conditions)", FoundRule.Action.String(), FoundRule.Persistent, FoundRule.BootTime)
+			matchCount++
+			continue
+		}
+		fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+		myfirstline := true
+		for _, entry := range FoundRule.Conditions {
+			mycondition := entry.String()
+			mycondition = strings.Replace(mycondition, "IP_PROTOCOL == 17", "IP_PROTOCOL == UDP", -1)
+			mycondition = strings.Replace(mycondition, "IP_PROTOCOL == 6", "IP_PROTOCOL == TCP", -1)
+			mycondition = strings.Replace(mycondition, "IP_PROTOCOL == 1", "IP_PROTOCOL == ICMP", -1)
+			if strings.HasPrefix(mycondition, "ALE_USER_ID == ") || strings.HasPrefix(mycondition, "ALE_PACKAGE_ID == ") {
+				continue
+			}
+			if myfirstline {
+				fmt.Printf("| %-38s | %-38s | %-38s | %-60s | %-10s | %-10t | %-10t\n",
+					FoundRule.ID.String(), FoundRule.Name, FoundRule.Provider.String(),
+					mycondition, FoundRule.Action.String(), FoundRule.Persistent, FoundRule.BootTime)
+				myfirstline = false
+				matchCount++
+			} else {
+				fmt.Printf("| %-38s | %-38s | %-38s | %-60s | %-10s | %-10s | %-10s\n",
+					"", "", "", mycondition, "", "", "")
+			}
+		}
+	}
+
+	fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	if matchCount == 0 {
+		fmt.Printf("\n[!] No rules found matching '%s'\n", nameFilter)
+	} else {
+		fmt.Printf("\n[+] Found %d rule(s) matching '%s'\n", matchCount, nameFilter)
+	}
+}
+
 func install(configFile string, makepersistent bool) {
 	// Check if the config file path is provided as an argument
 
@@ -593,6 +660,7 @@ func main() {
 	getcortexflag := flag.Bool("getcortex", false, "Get Cortex XDR proxy config and generate a WFP config")
 	outputFlag := flag.String("output", "", "Specify output file. To be used in conjonction with generating with getwec or getcortex")
 	deleteRuleFlag := flag.String("deleteproviderID", "", "Delete all rules from ProviderID")
+	printRulesFlag := flag.String("printrules", "", "Print all WFP rules whose name contains the given string (case-insensitive)")
 	flag.Parse()
 
 	// Let's print Provider IDs and SubLayer IDs
@@ -606,6 +674,11 @@ func main() {
 	}
 	if *deleteRuleFlag != "" {
 		delete_rule(*deleteRuleFlag)
+		os.Exit(0)
+	}
+
+	if *printRulesFlag != "" {
+		print_rules_by_name(*printRulesFlag)
 		os.Exit(0)
 	}
 
