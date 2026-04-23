@@ -49,6 +49,8 @@ Usage of wfp_edr.exe:
         in combination with -install to make them permanent
   -print
         Print WFP Providers and SubLayers
+  -printrules string
+        Print all WFP rules whose name contains the given string (case-insensitive)
   -providerID string
         Specify Provider ID with print
   -providerName string
@@ -63,6 +65,9 @@ C:\Temp\hello>wfp_edr.exe -print -providerID {4B153735-1049-4480-AAB4-D1B9BDC037
 
 ## Print all rules from a specific provider Name
 C:\Temp\hello>wfp_edr.exe -print -providerName Guardicore 
+
+## Print all rules from which contains a specific name
+C:\Temp\hello>wfp_edr.exe -printrules GlobalProtect 
 
 
 ## Get WEC  
