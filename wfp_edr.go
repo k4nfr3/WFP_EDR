@@ -387,13 +387,14 @@ func print_rules_by_name(nameFilter string) {
 	}
 
 	filterLower := strings.ToLower(nameFilter)
+	showAll := filterLower == "all"
 	matchCount := 0
 
 	fmt.Printf("| %-38s | %-38s | %-38s | %-60s | %-10s | %-10s | %-10s\n",
 		"RuleID", "RuleName", "ProviderID", "Match condition(s)", "Action", "Persistent", "Boot")
 
 	for _, FoundRule := range ReadRules {
-		if !strings.Contains(strings.ToLower(FoundRule.Name), filterLower) {
+		if !showAll && !strings.Contains(strings.ToLower(FoundRule.Name), filterLower) {
 			continue
 		}
 		if len(FoundRule.Conditions) == 0 {
@@ -660,7 +661,7 @@ func main() {
 	getcortexflag := flag.Bool("getcortex", false, "Get Cortex XDR proxy config and generate a WFP config")
 	outputFlag := flag.String("output", "", "Specify output file. To be used in conjonction with generating with getwec or getcortex")
 	deleteRuleFlag := flag.String("deleteproviderID", "", "Delete all rules from ProviderID")
-	printRulesFlag := flag.String("printrules", "", "Print all WFP rules whose name contains the given string (case-insensitive)")
+	printRulesFlag := flag.String("printrules", "", "Print WFP rules whose name contains the given string (case-insensitive). Use 'all' to print every rule")
 	flag.Parse()
 
 	// Let's print Provider IDs and SubLayer IDs
