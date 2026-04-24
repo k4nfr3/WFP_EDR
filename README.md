@@ -50,7 +50,7 @@ Usage of wfp_edr.exe:
   -print
         Print WFP Providers and SubLayers
   -printrules string
-        Print all WFP rules whose name contains the given string (case-insensitive)
+        Print all WFP rules whose name contains the given string (case-insensitive). Use 'all' to print every rule
   -providerID string
         Specify Provider ID with print
   -providerName string
